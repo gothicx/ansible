@@ -122,6 +122,12 @@ options:
     required: false
     default: "no"
     version_added: "2.6"
+  verbose:
+    description:
+      - If set to C(yes), then it will produce a more verbose output of the command line results.
+    required: false
+    default: "yes"
+    version_added: "2.7"
   allow_downgrade:
     description:
       - Specify if the named package and version is allowed to downgrade
@@ -176,6 +182,7 @@ author:
     - Eduard Snesarev (@verm666)
     - Berend De Schouwer (@berenddeschouwer)
     - Abhijeet Kasurde (@Akasurde)
+    - Marco Rodrigues (@gothicx)
 '''
 
 EXAMPLES = '''
@@ -765,7 +772,7 @@ def list_stuff(module, repoquerybin, conf_file, stuff, installroot='/', disabler
                                            is_available(module, repoq, stuff, conf_file, qf=qf, installroot=installroot)) if p.strip()]
 
 
-def exec_install(module, items, action, pkgs, res, yum_basecmd):
+def exec_install(module, items, action, pkgs, res, yum_basecmd, verbose):
     cmd = yum_basecmd + [action] + pkgs
 
     if module.check_mode:
@@ -782,7 +789,12 @@ def exec_install(module, items, action, pkgs, res, yum_basecmd):
                 module.fail_json(changed=False, msg=err, rc=rc)
 
     res['rc'] = rc
-    res['results'].append(out)
+
+    if verbose:
+        res['results'].append(out)
+    else:
+        res['results'] = "Installed packages: " + ", ".join(pkgs)
+
     res['msg'] += err
     res['changed'] = True
 
@@ -800,7 +812,7 @@ def exec_install(module, items, action, pkgs, res, yum_basecmd):
     return res
 
 
-def install(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en_plugins, dis_plugins, installroot='/', allow_downgrade=False):
+def install(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en_plugins, dis_plugins, verbose, installroot='/', allow_downgrade=False):
 
     pkgs = []
     downgrade_pkgs = []
@@ -974,15 +986,15 @@ def install(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, e
             pkgs.append(pkg)
 
     if downgrade_pkgs:
-        res = exec_install(module, items, 'downgrade', downgrade_pkgs, res, yum_basecmd)
+        res = exec_install(module, items, 'downgrade', downgrade_pkgs, res, yum_basecmd, verbose)
 
     if pkgs:
-        res = exec_install(module, items, 'install', pkgs, res, yum_basecmd)
+        res = exec_install(module, items, 'install', pkgs, res, yum_basecmd, verbose)
 
     return res
 
 
-def remove(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en_plugins, dis_plugins, installroot='/'):
+def remove(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en_plugins, dis_plugins, verbose, installroot='/'):
 
     pkgs = []
     res = {}
@@ -1014,7 +1026,12 @@ def remove(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en
         rc, out, err = module.run_command(cmd)
 
         res['rc'] = rc
-        res['results'].append(out)
+
+	if verbose:
+            res['results'].append(out)
+	else:
+            res['results'] = "Removed packages: " + ", ".join(pkgs)
+
         res['msg'] = err
 
         if rc != 0:
@@ -1088,7 +1105,7 @@ def parse_check_update(check_update_output):
     return updates
 
 
-def latest(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en_plugins, dis_plugins, update_only, installroot='/'):
+def latest(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en_plugins, dis_plugins, update_only, verbose, installroot='/'):
 
     res = {}
     res['results'] = []
@@ -1111,7 +1128,7 @@ def latest(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en
     if rc == 0 and update_all:
         res['results'].append('Nothing to do here, all packages are up to date')
         return res
-    elif rc == 100:
+    elif rc == 100 and not verbose:
         updates = parse_check_update(out)
     elif rc == 1:
         res['msg'] = err
@@ -1268,7 +1285,11 @@ def latest(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en
 
     res['rc'] = rc
     res['msg'] += err
-    res['results'].append(out)
+
+    if verbose:
+        res['results'].append(out)
+    else:
+        res['results'] = "Installed/Updated packages: " + ", ".join(pkgs['install'] + pkgs['update'])
 
     if rc:
         res['failed'] = True
@@ -1278,7 +1299,7 @@ def latest(module, items, repoq, yum_basecmd, conf_file, en_repos, dis_repos, en
 
 def ensure(module, state, pkgs, conf_file, enablerepo, disablerepo,
            disable_gpg_check, exclude, repoq, skip_broken, update_only, security,
-           bugfix, installroot='/', allow_downgrade=False, disable_plugin=None, enable_plugin=None):
+           bugfix, verbose, installroot='/', allow_downgrade=False, disable_plugin=None, enable_plugin=None):
 
     # fedora will redirect yum to dnf, which has incompatibilities
     # with how this module expects yum to operate. If yum-deprecated
@@ -1379,10 +1400,10 @@ def ensure(module, state, pkgs, conf_file, enablerepo, disablerepo,
         if disable_gpg_check:
             yum_basecmd.append('--nogpgcheck')
         res = install(module, pkgs, repoq, yum_basecmd, conf_file, en_repos, dis_repos,
-                      enable_plugin, disable_plugin, installroot=installroot,
+                      enable_plugin, disable_plugin, verbose, installroot=installroot,
                       allow_downgrade=allow_downgrade)
     elif state in ['removed', 'absent']:
-        res = remove(module, pkgs, repoq, yum_basecmd, conf_file, en_repos, dis_repos, enable_plugin, disable_plugin, installroot=installroot)
+        res = remove(module, pkgs, repoq, yum_basecmd, conf_file, en_repos, dis_repos, enable_plugin, disable_plugin, verbose, installroot=installroot)
     elif state == 'latest':
         if disable_gpg_check:
             yum_basecmd.append('--nogpgcheck')
@@ -1390,7 +1411,7 @@ def ensure(module, state, pkgs, conf_file, enablerepo, disablerepo,
             yum_basecmd.append('--security')
         if bugfix:
             yum_basecmd.append('--bugfix')
-        res = latest(module, pkgs, repoq, yum_basecmd, conf_file, en_repos, dis_repos, enable_plugin, disable_plugin, update_only, installroot=installroot)
+        res = latest(module, pkgs, repoq, yum_basecmd, conf_file, en_repos, dis_repos, enable_plugin, disable_plugin, update_only, verbose, installroot=installroot)
     else:
         # should be caught by AnsibleModule argument_spec
         module.fail_json(msg="we should never get here unless this all failed",
@@ -1431,6 +1452,7 @@ def main():
             allow_downgrade=dict(type='bool', default=False),
             security=dict(type='bool', default=False),
             bugfix=dict(required=False, type='bool', default=False),
+            verbose=dict(required=False, type='bool', default=True),
             enable_plugin=dict(type='list', default=[]),
             disable_plugin=dict(type='list', default=[]),
         ),
@@ -1491,11 +1513,13 @@ def main():
         update_only = params['update_only']
         security = params['security']
         bugfix = params['bugfix']
+        verbose = params['verbose']
         allow_downgrade = params['allow_downgrade']
         results = ensure(module, state, pkg, params['conf_file'], enablerepo,
                          disablerepo, disable_gpg_check, exclude, repoquery,
-                         skip_broken, update_only, security, bugfix, params['installroot'], allow_downgrade,
+                         skip_broken, update_only, security, bugfix, verbose, params['installroot'], allow_downgrade,
                          disable_plugin=disable_plugin, enable_plugin=enable_plugin)
+
         if repoquery:
             results['msg'] = '%s %s' % (
                 results.get('msg', ''),
