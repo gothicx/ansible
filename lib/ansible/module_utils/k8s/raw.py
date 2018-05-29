@@ -75,12 +75,43 @@ class KubernetesRawModule(KubernetesAnsibleModule):
         return argspec
 
     def execute_module(self):
+<<<<<<< HEAD
         if self.resource_definition:
             resource_params = self.resource_to_parameters(self.resource_definition)
             self.params.update(resource_params)
 
         self.authenticate()
 
+=======
+        changed = False
+        results = []
+        self.client = self.get_api_client()
+        for definition in self.resource_definitions:
+            kind = definition.get('kind')
+            search_kind = kind
+            if kind.lower().endswith('list'):
+                search_kind = kind[:-4]
+            api_version = definition.get('apiVersion')
+            resource = self.find_resource(search_kind, api_version, fail=True)
+            definition['kind'] = resource.kind
+            definition['apiVersion'] = resource.group_version
+            result = self.perform_action(resource, definition)
+            changed = changed or result['changed']
+            results.append(result)
+
+        if len(results) == 1:
+            self.exit_json(**results[0])
+
+        self.exit_json(**{
+            'changed': changed,
+            'result': {
+                'results': results
+            }
+        })
+
+    def perform_action(self, resource, definition):
+        result = {'changed': False, 'result': {}}
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
         state = self.params.pop('state', None)
         force = self.params.pop('force', False)
         name = self.params.get('name')
@@ -123,11 +154,15 @@ class KubernetesRawModule(KubernetesAnsibleModule):
                 return_attributes['changed'] = True
                 self.exit_json(**return_attributes)
 
+            match = False
+            diffs = []
+
             if existing and force:
                 k8s_obj = None
                 request_body = self.helper.request_body_from_params(self.params)
                 if not self.check_mode:
                     try:
+<<<<<<< HEAD
                         k8s_obj = self.helper.replace_object(name, namespace, body=request_body)
                     except KubernetesException as exc:
                         self.fail_json(msg="Failed to replace object: {0}".format(exc.message),
@@ -209,3 +244,29 @@ class OpenShiftRawModule(OpenShiftAnsibleModuleMixin, KubernetesRawModule):
             self.fail_json(msg='Failed to retrieve requested object',
                            error=exc.value.get('status'))
         return k8s_obj
+=======
+                        k8s_obj = resource.replace(definition, name=name, namespace=namespace).to_dict()
+                        match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
+                        result['result'] = k8s_obj
+                    except DynamicApiError as exc:
+                        self.fail_json(msg="Failed to replace object: {0}".format(exc.body),
+                                       error=exc.status, status=exc.status, reason=exc.reason)
+                result['changed'] = not match
+                result['method'] = 'replace'
+                result['diff'] = diffs
+                return result
+
+            # Differences exist between the existing obj and requested params
+            if not self.check_mode:
+                try:
+                    k8s_obj = resource.patch(definition, name=name, namespace=namespace).to_dict()
+                    match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
+                    result['result'] = k8s_obj
+                except DynamicApiError as exc:
+                    self.fail_json(msg="Failed to patch object: {0}".format(exc.body),
+                                   error=exc.status, status=exc.status, reason=exc.reason)
+            result['changed'] = not match
+            result['method'] = 'patch'
+            result['diff'] = diffs
+            return result
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde

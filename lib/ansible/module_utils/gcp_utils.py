@@ -106,6 +106,12 @@ class GcpSession(object):
         if not HAS_GOOGLE_LIBRARIES:
             self.module.fail_json(msg="Please install the google-auth library")
 
+<<<<<<< HEAD
+=======
+        if 'auth_kind' not in self.module.params:
+            self.module.fail_json(msg="Auth kind parameter is missing")
+
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
         if self.module.params.get('service_account_email') is not None and self.module.params['auth_kind'] != 'machineaccount':
             self.module.fail_json(
                 msg="Service Acccount Email only works with Machine Account-based authentication"

@@ -1,5 +1,6 @@
 - name: Prepare random number
   set_fact:
+<<<<<<< HEAD
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
@@ -17,6 +18,20 @@
       location: eastus
       properties:
         accessTier: Hot
+=======
+    nsgname: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: yes
+
+- name: Call REST API
+  azure_rm_resource:
+    api_version: '2018-02-01'
+    resource_group: "{{ resource_group }}"
+    provider: network
+    resource_type: networksecuritygroups
+    resource_name: "{{ nsgname }}"
+    body:
+      location: eastus
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
     idempotency: yes
   register: output
 
@@ -24,6 +39,7 @@
   assert:
     that: output.changed
 
+<<<<<<< HEAD
 - name: Call REST API - StorageAccounts_Create - with same parameters
   azure_rm_resource:
     api_version: '2017-10-01'
@@ -38,6 +54,17 @@
       location: eastus
       properties:
         accessTier: Hot
+=======
+- name: Call REST API
+  azure_rm_resource:
+    api_version: '2018-02-01'
+    resource_group: "{{ resource_group }}"
+    provider: network
+    resource_type: networksecuritygroups
+    resource_name: "{{ nsgname }}"
+    body:
+      location: eastus
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
     idempotency: yes
   register: output
 
@@ -45,6 +72,7 @@
   assert:
     that: not output.changed
 
+<<<<<<< HEAD
 - name: Call REST API - StorageAccounts_Create - with different parameters
   azure_rm_resource:
     api_version: '2017-10-01'
@@ -59,6 +87,20 @@
       location: eastus
       properties:
         accessTier: Cool
+=======
+- name: Call REST API
+  azure_rm_resource:
+    api_version: '2018-02-01'
+    resource_group: "{{ resource_group }}"
+    provider: network
+    resource_type: networksecuritygroups
+    resource_name: "{{ nsgname }}"
+    body:
+      location: eastus
+      tags:
+        a: "abc"
+        b: "cde"
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
     idempotency: yes
   register: output
 
@@ -69,9 +111,17 @@
 
 - name: Try to get information about account
   azure_rm_resource_facts:
+<<<<<<< HEAD
     api_version: '2017-10-01'
     resource_group: "{{ resource_group }}"
     provider: storage
     resource_type: storageaccounts
     resource_name: stacc{{ rpfx }}
+=======
+    api_version: '2018-02-01'
+    resource_group: "{{ resource_group }}"
+    provider: network
+    resource_type: networksecuritygroups
+    resource_name: "{{ nsgname }}"
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
   register: output

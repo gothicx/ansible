@@ -136,9 +136,15 @@ def openstack_cloud_from_module(module, min_version='0.12.0'):
                     'auth', 'region_name', 'verify',
                     'cacert', 'key', 'api_timeout', 'interface'):
                 if module.params[param] is not None:
+<<<<<<< HEAD
                     module.fail_json(fail_message.format(param=param))
             if module.params['auth_type'] != 'password':
                 module.fail_json(fail_message.format(param='auth_type'))
+=======
+                    module.fail_json(msg=fail_message.format(param=param))
+            if module.params['auth_type'] != 'password':
+                module.fail_json(msg=fail_message.format(param='auth_type'))
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
             return sdk, sdk.connect(**cloud_config)
         else:
             return sdk, sdk.connect(

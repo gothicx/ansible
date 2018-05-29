@@ -7,7 +7,7 @@ __metaclass__ = type
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
-                    'supported_by': 'community'}
+                    'supported_by': 'core'}
 
 
 DOCUMENTATION = '''
@@ -89,6 +89,7 @@ options:
 
 EXAMPLES = '''
 - name: configure a zone on the system using grid primary and secondaries
+<<<<<<< HEAD
   nios_zone:
     name: ansible.com
     grid_primary:
@@ -108,6 +109,15 @@ EXAMPLES = '''
   nios_zone:
     name: ansible.com
     ns_group: examplensg
+=======
+  nios_zone:
+    name: ansible.com
+    grid_primary:
+      - name: gridprimary.grid.com
+    grid_secondaries:
+      - name: gridsecondary1.grid.com
+      - name: gridsecondary2.grid.com
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
     restart_if_needed: true
     state: present
     provider:
@@ -116,6 +126,17 @@ EXAMPLES = '''
       password: admin
   connection: local
 
+- name: configure a zone on the system using a name server group
+  nios_zone:
+    name: ansible.com
+    ns_group: examplensg
+    restart_if_needed: true
+    state: present
+    provider:
+      host: "{{ inventory_hostname_short }}"
+      username: admin
+      password: admin
+  connection: local
 - name: update the comment and ext attributes for an existing zone
   nios_zone:
     name: ansible.com
@@ -128,7 +149,6 @@ EXAMPLES = '''
       username: admin
       password: admin
   connection: local
-
 - name: remove the dns zone
   nios_zone:
     name: ansible.com
@@ -144,6 +164,7 @@ RETURN = ''' # '''
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.net_tools.nios.api import WapiModule
+from ansible.module_utils.net_tools.nios.api import NIOS_ZONE
 
 
 def main():
@@ -182,7 +203,7 @@ def main():
                            ])
 
     wapi = WapiModule(module)
-    result = wapi.run('zone_auth', ib_spec)
+    result = wapi.run(NIOS_ZONE, ib_spec)
 
     module.exit_json(**result)
 

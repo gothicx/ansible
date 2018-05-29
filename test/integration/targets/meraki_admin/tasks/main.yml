@@ -80,6 +80,20 @@
       - '"400" in create_tags_invalid_permission.msg'
       # - '"Invalid permission type" in create_tags_invalid_permission.msg'
 
+<<<<<<< HEAD
+=======
+- name: Make sure TestNet and TestNet2 are created
+  meraki_network:
+    auth_key: '{{auth_key}}'
+    state: present
+    org_name: '{{test_org_name}}'
+    net_name: '{{item}}'
+    type: switch
+  loop:
+    - TestNet
+    - TestNet2
+
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
 - name: Create administrator with networks
   meraki_admin:
     auth_key: '{{auth_key}}'

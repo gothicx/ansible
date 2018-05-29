@@ -53,8 +53,15 @@ class KubernetesAnsibleScaleModule(KubernetesRawModule):
 
         self.authenticate()
 
+<<<<<<< HEAD
         name = self.params.get('name')
         namespace = self.params.get('namespace')
+=======
+        name = definition['metadata']['name']
+        namespace = definition['metadata'].get('namespace')
+        api_version = definition['apiVersion']
+        kind = definition['kind']
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
         current_replicas = self.params.get('current_replicas')
         replicas = self.params.get('replicas')
         resource_version = self.params.get('resource_version')
@@ -65,6 +72,11 @@ class KubernetesAnsibleScaleModule(KubernetesRawModule):
         existing_count = None
         return_attributes = dict(changed=False, result=dict())
 
+<<<<<<< HEAD
+=======
+        resource = self.find_resource(kind, api_version, fail=True)
+
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
         try:
             existing = self.helper.get_object(name, namespace)
             return_attributes['result'] = existing.to_dict()

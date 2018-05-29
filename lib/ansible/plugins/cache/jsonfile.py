@@ -43,12 +43,16 @@ DOCUMENTATION = '''
 '''
 
 import codecs
+import json
 
+<<<<<<< HEAD
 try:
     import simplejson as json
 except ImportError:
     import json
 
+=======
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
 from ansible.parsing.ajson import AnsibleJSONEncoder, AnsibleJSONDecoder
 from ansible.plugins.cache import BaseFileCacheModule
 

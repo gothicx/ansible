@@ -33,9 +33,15 @@ from ansible.module_utils.k8s.helper import\
     HAS_STRING_UTILS
 
 try:
+<<<<<<< HEAD
     from openshift.helper.kubernetes import KubernetesObjectHelper
     from openshift.helper.openshift import OpenShiftObjectHelper
     from openshift.helper.exceptions import KubernetesException
+=======
+    import kubernetes
+    from openshift.dynamic import DynamicClient
+    from openshift.dynamic.exceptions import ResourceNotFoundError, ResourceNotUniqueError
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
     HAS_K8S_MODULE_HELPER = True
 except ImportError as exc:
     class KubernetesObjectHelper(object):
@@ -115,9 +121,68 @@ class KubernetesAnsibleModule(AnsibleModule):
 
     @property
     def argspec(self):
+<<<<<<< HEAD
         raise NotImplementedError()
 
     def get_helper(self, api_version, kind):
+=======
+        """
+        Introspect the model properties, and return an Ansible module arg_spec dict.
+        :return: dict
+        """
+        if self._argspec_cache:
+            return self._argspec_cache
+        argument_spec = copy.deepcopy(COMMON_ARG_SPEC)
+        argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
+        self._argspec_cache = argument_spec
+        return self._argspec_cache
+
+    def get_api_client(self, **auth_params):
+        auth_args = AUTH_ARG_SPEC.keys()
+
+        auth_params = auth_params or getattr(self, 'params', {})
+        auth = copy.deepcopy(auth_params)
+
+        configuration = kubernetes.client.Configuration()
+        for key, value in iteritems(auth_params):
+            if key in auth_args and value is not None:
+                if key == 'api_key':
+                    setattr(configuration, key, {'authorization': "Bearer {0}".format(value)})
+                else:
+                    setattr(configuration, key, value)
+            elif key in auth_args and value is None:
+                env_value = os.getenv('K8S_AUTH_{0}'.format(key.upper()), None)
+                if env_value is not None:
+                    setattr(configuration, key, env_value)
+                    auth[key] = env_value
+
+        kubernetes.client.Configuration.set_default(configuration)
+
+        if auth.get('username') and auth.get('password') and auth.get('host'):
+            auth_method = 'params'
+        elif auth.get('api_key') and auth.get('host'):
+            auth_method = 'params'
+        elif auth.get('kubeconfig') or auth.get('context'):
+            auth_method = 'file'
+        else:
+            auth_method = 'default'
+
+        # First try to do incluster config, then kubeconfig
+        if auth_method == 'default':
+            try:
+                kubernetes.config.load_incluster_config()
+                return DynamicClient(kubernetes.client.ApiClient())
+            except kubernetes.config.ConfigException:
+                return DynamicClient(self.client_from_kubeconfig(auth.get('kubeconfig'), auth.get('context')))
+
+        if auth_method == 'file':
+            return DynamicClient(self.client_from_kubeconfig(auth.get('kubeconfig'), auth.get('context')))
+
+        if auth_method == 'params':
+            return DynamicClient(kubernetes.client.ApiClient(configuration))
+
+    def client_from_kubeconfig(self, config_file, context):
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
         try:
             helper = KubernetesAnsibleModuleHelper(api_version=api_version, kind=kind, debug=False)
             helper.get_model(api_version, kind)
@@ -151,6 +216,18 @@ class KubernetesAnsibleModule(AnsibleModule):
         except KubernetesException as e:
             self.fail_json(msg='Error loading config', error=str(e))
 
+    def find_resource(self, kind, api_version, fail=False):
+        for attribute in ['kind', 'name', 'singular_name']:
+            try:
+                return self.client.resources.get(**{'api_version': api_version, attribute: kind})
+            except (ResourceNotFoundError, ResourceNotUniqueError):
+                pass
+        try:
+            return self.client.resources.get(api_version=api_version, short_names=[kind])
+        except (ResourceNotFoundError, ResourceNotUniqueError):
+            if fail:
+                self.fail(msg='Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]'.format(api_version, kind))
+
     def remove_aliases(self):
         """
         The helper doesn't know what to do with aliased keys
@@ -166,13 +243,14 @@ class KubernetesAnsibleModule(AnsibleModule):
         result = None
         path = os.path.normpath(src)
         if not os.path.exists(path):
-            self.fail_json(msg="Error accessing {0}. Does the file exist?".format(path))
+            self.fail(msg="Error accessing {0}. Does the file exist?".format(path))
         try:
             result = yaml.safe_load(open(path, 'r'))
         except (IOError, yaml.YAMLError) as exc:
-            self.fail_json(msg="Error loading resource_definition: {0}".format(exc))
+            self.fail(msg="Error loading resource_definition: {0}".format(exc))
         return result
 
+<<<<<<< HEAD
     def resource_to_parameters(self, resource):
         """ Converts a resource definition to module parameters """
         parameters = {}
@@ -210,10 +288,29 @@ class KubernetesAnsibleModule(AnsibleModule):
 
 class OpenShiftAnsibleModuleHelper(AnsibleMixin, OpenShiftObjectHelper):
     pass
+=======
+    @staticmethod
+    def diff_objects(existing, new):
+        if not HAS_DICTDIFFER:
+            return False, []
+
+        diffs = list(dictdiffer.diff(new, existing))
+        match = len(diffs) == 0
+        return match, diffs
+
+
+class KubernetesAnsibleModule(AnsibleModule, K8sAnsibleMixin):
+    resource_definition = None
+    api_version = None
+    kind = None
+
+    def __init__(self, *args, **kwargs):
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
 
 
 class OpenShiftAnsibleModuleMixin(object):
 
+<<<<<<< HEAD
     def get_helper(self, api_version, kind):
         try:
             helper = OpenShiftAnsibleModuleHelper(api_version=api_version, kind=kind, debug=False)
@@ -221,3 +318,10 @@ class OpenShiftAnsibleModuleMixin(object):
             return helper
         except KubernetesException as exc:
             self.fail_json(msg="Error initializing module helper: {0}".format(exc.message))
+=======
+    def execute_module(self):
+        raise NotImplementedError()
+
+    def fail(self, msg=None):
+        self.fail_json(msg=msg)
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde

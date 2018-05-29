@@ -191,8 +191,14 @@ def is_cache_stale(cache_file, cache_expiration_time, refresh=False):
 
 
 def get_cache_settings(cloud=None):
+<<<<<<< HEAD:contrib/inventory/openstack_inventory.py
     config = cloud_config.OpenStackConfig(
         config_files=cloud_config.CONFIG_FILES + CONFIG_FILES).get_one()
+=======
+    config_files = cloud_config.CONFIG_FILES + CONFIG_FILES
+    config = cloud_config.OpenStackConfig(
+        config_files=config_files).get_one(cloud=cloud)
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde:contrib/inventory/openstack_inventory.py
     # For inventory-wide caching
     cache_expiration_time = config.get_cache_expiration_time()
     cache_path = config.get_cache_path()

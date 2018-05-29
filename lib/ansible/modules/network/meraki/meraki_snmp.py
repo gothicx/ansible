@@ -99,7 +99,11 @@ def get_snmp(meraki, org_id):
     r = meraki.request(path,
                        method='GET',
                        )
+<<<<<<< HEAD
     return json.loads(r)
+=======
+    return r
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
 
 
 def set_snmp(meraki, org_id):
@@ -144,7 +148,11 @@ def set_snmp(meraki, org_id):
                            method='PUT',
                            payload=json.dumps(payload))
         meraki.result['changed'] = True
+<<<<<<< HEAD
         return json.loads(r)
+=======
+        return r
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
     return -1
 
 
@@ -207,7 +215,11 @@ def main():
     # part where your module will do what it needs to do)
     org_id = meraki.params['org_id']
 
+<<<<<<< HEAD
     if org_id:
+=======
+    if org_id is None:
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
         org_id = meraki.get_org_id(meraki.params['org_name'])
 
     if meraki.params['state'] == 'query':

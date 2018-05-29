@@ -82,7 +82,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 for varname in query:
                     hostvars[host][varname] = self._query_vbox_data(host, query[varname])
 
+<<<<<<< HEAD
             strict = self._options.get('strict', False)
+=======
+            strict = self.get_option('strict')
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
 
             # create composite vars
             self._set_composite_vars(self.get_option('compose'), hostvars[host], host, strict=strict)
@@ -223,7 +227,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         source_data = None
         if cache:
-            cache = self._options.get('cache')
+            cache = self.get_option('cache')
 
         update_cache = False
         if cache:
