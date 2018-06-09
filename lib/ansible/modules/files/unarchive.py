@@ -26,6 +26,7 @@ description:
      - By default, it will copy the source file from the local system to the target before unpacking.
      - Set C(remote_src=yes) to unpack an archive which already exists on the target.
      - For Windows targets, use the M(win_unzip) module instead.
+     - If checksum validation is desired, use M(get_url) or M(uri) instead to fetch the file and set C(remote_src=yes).
 options:
   src:
     description:
@@ -118,6 +119,14 @@ EXAMPLES = r'''
     src: https://example.com/example.zip
     dest: /usr/local/bin
     remote_src: yes
+
+- name: Unarchive a file with extra options
+  unarchive:
+    src: /tmp/foo.zip
+    dest: /usr/local/bin
+    extra_opts:
+    - --transform
+    - s/^xxx/yyy/
 '''
 
 import binascii
@@ -778,7 +787,6 @@ def main():
         # not checking because of daisy chain to file module
         argument_spec=dict(
             src=dict(type='path', required=True),
-            original_basename=dict(type='str'),  # used to handle 'dest is a directory' via template, a slight hack
             dest=dict(type='path', required=True),
             remote_src=dict(type='bool', default=False),
             creates=dict(type='path'),

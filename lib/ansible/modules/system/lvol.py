@@ -31,9 +31,14 @@ options:
     - The name of the logical volume.
   min_size:
     description:
+<<<<<<< HEAD
     - The minimum size to extend the logical volume up to, according to
       lvcreate(8) --size, by default in megabytes or optionally with one
       of [bBsSkKmMgGtTpPeE] units; Float values must begin with a digit.
+=======
+    - The minimum size to extend the logical volume up to. The size must be specified
+      in megabytes (mM) or gigabytes (gG); Float values must begin with a digit.
+>>>>>>> fcf8a210008fe52b742fb0753c4ae6693367e9a7
       In the case the actual lv size is greater than the minimum size it does
       nothing.
       version_added: "2.6"
@@ -336,7 +341,11 @@ def main():
         test_opt = ''
 
     if min_size:
+<<<<<<< HEAD
          if min_size[-1].lower() in 'bskmgtpe':
+=======
+         if min_size[-1].lower() in 'mg':
+>>>>>>> fcf8a210008fe52b742fb0753c4ae6693367e9a7
              min_size_unit = min_size[-1].lower()
              min_size = min_size[0:-1]
 
@@ -487,9 +496,6 @@ def main():
             else:
                 module.fail_json(msg="Failed to remove logical volume %s" % (lv), rc=rc, err=err)
 
-        elif not size:
-            pass
-
         elif size_opt == 'l':
             # Resize LV based on % value
             tool = None
@@ -537,8 +543,21 @@ def main():
         else:
             # resize LV based on absolute values
             tool = None
+<<<<<<< HEAD
             if int(size) > this_lv['size'] or int(min_size) > this_lv['size']:
                 tool = module.get_bin_path("lvextend", required=True)
+=======
+	    if size is not None:
+    	       if int(size) > this_lv['size']:
+                  tool = module.get_bin_path("lvextend", required=True)
+	    elif min_size is not None:
+		if min_size_unit.lower() in 'm':
+        	    if int(min_size) > this_lv['size']:
+                     tool = module.get_bin_path("lvextend", required=True)
+                elif min_size_unit.lower() in 'g':
+        	    if int(min_size) > (this_lv['size'] / 1024):
+                       tool = module.get_bin_path("lvextend", required=True)
+>>>>>>> fcf8a210008fe52b742fb0753c4ae6693367e9a7
             elif not min_size and shrink and int(size) < this_lv['size']:
                 if int(size) == 0:
                     module.fail_json(msg="Sorry, no shrinking of %s to 0 permitted." % (this_lv['name']))
@@ -551,8 +570,16 @@ def main():
             if tool:
                 if resizefs:
                     tool = '%s %s' % (tool, '--resizefs')
+<<<<<<< HEAD
                 elif min_size and this_lv['size'] < min_size:
                     size = min_size
+=======
+		
+		if min_size:
+		   size = min_size
+		   size_unit = min_size_unit
+
+>>>>>>> fcf8a210008fe52b742fb0753c4ae6693367e9a7
                 cmd = "%s %s -%s %s%s %s/%s %s" % (tool, test_opt, size_opt, size, size_unit, vg, this_lv['name'], pvs)
                 rc, out, err = module.run_command(cmd)
                 if "Reached maximum COW size" in out:

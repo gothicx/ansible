@@ -16,8 +16,8 @@ This cycle can be extended in order to allow for larger changes to be properly
 implemented and tested before a new release is made available.
 
 Ansible has a graduated support structure that extends to three major releases.
-For more information, read about the :ref: `_development_and_stable_versiona_maintenance_workflow` or see
-the chart in :ref:`schedule` for the degrees to which current releases are supported.
+For more information, read about the :ref:`development_and_stable_version_maintenance_workflow` or
+see the chart in :ref:`release_schedule` for the degrees to which current releases are supported.
 
 .. note:: Support for three major releases began with Ansible-2.4. Ansible-2.3 and older versions
     are only supported for two releases.
@@ -29,10 +29,8 @@ latest features and security fixes.
 Older, unsupported versions of Ansible can contain unfixed security
 vulnerabilities (*CVE*).
 
-You can refer to the `porting guides`_ for tips on updating your Ansible
+You can refer to the :ref:`porting guides<porting_guides>` for tips on updating your Ansible
 playbooks to run on newer versions.
-
-.. _porting guides: https://docs.ansible.com/ansible/porting_guides.html
 
 .. _release_schedule:
 
@@ -42,9 +40,10 @@ Release status
 ===============   ==========================   =================================================
 Ansible Release   Latest Version               Status
 ===============   ==========================   =================================================
-devel             `2.5`_ (unreleased, trunk)   In development
-2.4               `2.4.3`_ (2018-01-31)        Supported (security **and** general bug fixes)
-2.3               `2.3.3`_ (2017-12-20)        Supported (security **and** critical bug fixes)
+devel             `2.6` (unreleased, trunk)    In development
+2.5               `2.5.0`_ (2018-03-23)        Supported (security **and** general bugfixes)
+2.4               `2.4.4`_ (2018-01-31)        Supported (security **and** critical bug fixes)
+2.3               `2.3.3`_ (2017-12-20)        Unsupported (end of life)
 2.2               `2.2.3`_ (2017-05-09)        Unsupported (end of life)
 2.1               `2.1.6`_ (2017-06-01)        Unsupported (end of life)
 2.0               `2.0.2`_ (2016-04-19)        Unsupported (end of life)
@@ -56,8 +55,10 @@ devel             `2.5`_ (unreleased, trunk)   In development
     security and general bug fixes when it is first released, security and critical bug fixes when
     2.5 is released, and **only** security fixes once 2.6 is released.
 
-.. _2.5: https://github.com/ansible/ansible/blob/devel/CHANGELOG.md
-.. _2.4.3: https://github.com/ansible/ansible/blob/stable-2.4/CHANGELOG.md
+.. Comment: devel used to point here but we're currently revamping our changelog process and have no
+   link to a static changelog for devel _2.6: https://github.com/ansible/ansible/blob/devel/CHANGELOG.md
+.. _2.5.0: https://github.com/ansible/ansible/blob/stable-2.5/changelogs/CHANGELOG-v2.5.rst
+.. _2.4.4: https://github.com/ansible/ansible/blob/stable-2.4/CHANGELOG.md
 .. _2.3.3: https://github.com/ansible/ansible/blob/stable-2.3/CHANGELOG.md
 .. _2.2.3: https://github.com/ansible/ansible/blob/stable-2.2/CHANGELOG.md
 .. _2.1.6: https://github.com/ansible/ansible/blob/stable-2.1/CHANGELOG.md
@@ -67,7 +68,7 @@ devel             `2.5`_ (unreleased, trunk)   In development
 .. _support_life:
 .. _methods:
 
-.. _development_and_stable_versiona_maintenance_workflow:
+.. _development_and_stable_version_maintenance_workflow:
 
 Development and stable version maintenance workflow
 ```````````````````````````````````````````````````
