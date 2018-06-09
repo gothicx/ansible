@@ -377,9 +377,11 @@ class TaskExecutor:
                 if all(isinstance(o, string_types) for o in items):
                     final_items = []
 
+                    found = None
                     for allowed in ['name', 'pkg', 'package']:
                         name = self._task.args.pop(allowed, None)
                         if name is not None:
+                            found = allowed
                             break
 
                     # This gets the information to check whether the name field
@@ -397,6 +399,12 @@ class TaskExecutor:
                         # name/pkg or the name/pkg field doesn't have any variables
                         # and thus the items can't be squashed
                         if template_no_item != template_with_item:
+                            display.deprecated(
+                                'Invoking "%s" only once while using a loop via squash_actions is deprecated. '
+                                'Instead of using a loop to supply multiple items and specifying `%s: %s`, '
+                                'please use `%s: %r` and remove the loop' % (self._task.action, found, name, found, self._task.loop),
+                                version='2.11'
+                            )
                             for item in items:
                                 variables[loop_var] = item
                                 if self._task.evaluate_conditional(templar, variables):
@@ -813,7 +821,9 @@ class TaskExecutor:
             self._play_context.timeout = connection.get_option('persistent_command_timeout')
             display.vvvv('attempting to start connection', host=self._play_context.remote_addr)
             display.vvvv('using connection plugin %s' % connection.transport, host=self._play_context.remote_addr)
-            socket_path = self._start_connection()
+            # We don't need to send the entire contents of variables to ansible-connection
+            filtered_vars = dict((key, value) for key, value in variables.items() if key.startswith('ansible'))
+            socket_path = self._start_connection(filtered_vars)
             display.vvvv('local domain socket path is %s' % socket_path, host=self._play_context.remote_addr)
             setattr(connection, '_socket_path', socket_path)
 
@@ -886,7 +896,7 @@ class TaskExecutor:
 
         return handler
 
-    def _start_connection(self):
+    def _start_connection(self, variables):
         '''
         Starts the persistent connection
         '''
@@ -918,8 +928,12 @@ class TaskExecutor:
         # that means only protocol=0 will work.
         src = cPickle.dumps(self._play_context.serialize(), protocol=0)
         stdin.write(src)
-
         stdin.write(b'\n#END_INIT#\n')
+
+        src = cPickle.dumps(variables, protocol=0)
+        stdin.write(src)
+        stdin.write(b'\n#END_VARS#\n')
+
         stdin.flush()
 
         (stdout, stderr) = p.communicate()

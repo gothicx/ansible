@@ -29,15 +29,11 @@ DOCUMENTATION = """
 
     description:
       - Uses the OpenShift Python client to fetch a specific object by name, all matching objects within a
-        namespace, or all matching objects for all namespaces, as well as information about the cluster.
+        namespace, or all matching objects for all namespaces.
       - Provides access the full range of K8s APIs.
       - Enables authentication via config file, certificates, password or token.
 
     options:
-      cluster_info:
-        description:
-        - Use to specify the type of cluster information you are attempting to retrieve. Will take priority
-          over all the other options.
       api_version:
         description:
         - Use to specify the API version. If I(resource definition) is provided, the I(apiVersion) from the
@@ -119,7 +115,7 @@ DOCUMENTATION = """
 
     requirements:
       - "python >= 2.7"
-      - "openshift >= 0.6"
+      - "openshift == 0.4.1"
       - "PyYAML >= 3.11"
 
     notes:
@@ -193,11 +189,14 @@ RETURN = """
 """
 
 from ansible.plugins.lookup import LookupBase
+<<<<<<< HEAD
+from ansible.module_utils.k8s.lookup import KubernetesLookup
+=======
 
-import os
-
-from ansible.module_utils.six import iteritems
 from ansible.module_utils.k8s.common import K8sAnsibleMixin
+
+from ansible.errors import AnsibleError
+
 
 try:
     from openshift.dynamic import DynamicClient
@@ -238,6 +237,9 @@ class KubernetesLookup(K8sAnsibleMixin):
         self.helper = None
         self.connection = {}
 
+    def fail(self, msg=None):
+        raise AnsibleError(msg)
+
     def run(self, terms, variables=None, **kwargs):
         self.params = kwargs
         self.client = self.get_api_client()
@@ -267,12 +269,12 @@ class KubernetesLookup(K8sAnsibleMixin):
             self.namespace = resource_definition.get('metadata', {}).get('namespace', self.namespace)
 
         if not self.kind:
-            raise Exception(
+            raise AnsibleError(
                 "Error: no Kind specified. Use the 'kind' parameter, or provide an object YAML configuration "
                 "using the 'resource_definition' parameter."
             )
 
-        resource = self.client.resources.get(kind=self.kind, api_version=self.api_version)
+        resource = self.find_resource(self.kind, self.api_version, fail=True)
         try:
             k8s_obj = resource.get(name=self.name, namespace=self.namespace, label_selector=self.label_selector, field_selector=self.field_selector)
         except NotFoundError:
@@ -282,6 +284,7 @@ class KubernetesLookup(K8sAnsibleMixin):
             return [k8s_obj.to_dict()]
 
         return k8s_obj.to_dict().get('items')
+>>>>>>> 2ecf1d35d3c6b446a4404e3df95c9d888c9cafde
 
 
 class LookupModule(LookupBase):

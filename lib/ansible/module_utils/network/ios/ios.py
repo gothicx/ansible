@@ -114,7 +114,7 @@ def get_config(module, flags=None):
         return _DEVICE_CONFIGS[flag_str]
     except KeyError:
         connection = get_connection(module)
-        out = connection.get_config(flags=flags)
+        out = connection.get_config(filter=flags)
         cfg = to_text(out, errors='surrogate_then_replace').strip()
         _DEVICE_CONFIGS[flag_str] = cfg
         return cfg
@@ -165,4 +165,4 @@ def run_commands(module, commands, check_rc=True):
 def load_config(module, commands):
     connection = get_connection(module)
 
-    out = connection.edit_config(commands)
+    return connection.edit_config(commands)

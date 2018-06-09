@@ -68,6 +68,17 @@ options:
     admin_password:
         description:
             - The password of the administrator login.
+    create_mode:
+        description:
+            - Create mode of SQL Server
+        default: Default
+    state:
+        description:
+            - Assert the state of the PostgreSQL server. Use 'present' to create or update a server and 'absent' to delete it.
+        default: present
+        choices:
+            - present
+            - absent
 
 extends_documentation_fragment:
     - azure
